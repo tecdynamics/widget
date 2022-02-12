@@ -1,0 +1,22 @@
+{
+    "name": "tecdynamics/widget",
+    "description": "Widget package",
+    "type": "package",
+    "autoload": {
+        "psr-4": {
+            "Tec\\Widget\\": "src"
+        }
+    },
+
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Tec\\Widget\\Providers\\WidgetServiceProvider"
+            ],
+            "aliases": {
+                "Widget": "Tec\\Widget\\Facades\\WidgetFacade",
+                "WidgetGroup": "Tec\\Widget\\Facades\\WidgetGroupFacade"
+            }
+        }
+    }
+}
