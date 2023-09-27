@@ -7,7 +7,7 @@ if (!function_exists('register_widget')) {
      */
     function register_widget($widgetId)
     {
-        return Widget::registerWidget($widgetId);
+      return Widget::registerWidget($widgetId);
     }
 }
 

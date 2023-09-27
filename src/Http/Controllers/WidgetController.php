@@ -78,6 +78,7 @@ class WidgetController extends BaseController
                 'sidebar_id' => $sidebarId,
                 'theme'      => $this->theme,
             ]);
+
             foreach ($request->input('items', []) as $key => $item) {
                 parse_str($item, $data);
                 if (empty($data['id'])) {
@@ -97,7 +98,6 @@ class WidgetController extends BaseController
                 'sidebar_id' => $sidebarId,
                 'theme'      => $this->theme,
             ]);
-
             return $response
                 ->setData(view('packages/widget::item', compact('widgetAreas'))->render())
                 ->setMessage(trans('packages/widget::widget.save_success'));
@@ -144,7 +144,7 @@ class WidgetController extends BaseController
     {
         $this->prepareGlobals($request);
 
-        $factory = $application->make('Tec.widget');
+        $factory = $application->make('tec.widget');
         $widgetName = $request->input('name', '');
         $widgetParams = $factory->decryptWidgetParams($request->input('params', ''));
 

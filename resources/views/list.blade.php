@@ -7,6 +7,7 @@
                 <h2>{{ trans('packages/widget::widget.available') }}</h2>
                 <p>{{ trans('packages/widget::widget.instruction') }}</p>
                 <ul id="wrap-widget-1">
+
                     @foreach (Widget::getWidgets() as $widget)
                         <li data-id="{{ $widget->getId() }}">
                             <div class="widget-handle">

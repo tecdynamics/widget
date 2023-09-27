@@ -97,6 +97,7 @@ abstract class AbstractWidgetFactory
      */
     protected function instantiateWidget(array $params = [])
     {
+
         WidgetId::increment();
 
         $this->widgetName = $this->parseFullWidgetNameFromString(array_shift($params));

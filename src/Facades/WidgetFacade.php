@@ -12,7 +12,7 @@ class WidgetFacade extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'Tec.widget';
+        return 'tec.widget';
     }
 
     /**
@@ -24,6 +24,6 @@ class WidgetFacade extends Facade
      */
     public static function group($name)
     {
-        return app('Tec.widget-group-collection')->group($name);
+        return app('tec.widget-group-collection')->group($name);
     }
 }

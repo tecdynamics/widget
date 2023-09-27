@@ -33,11 +33,11 @@ class WidgetServiceProvider extends ServiceProvider
             return new WidgetCacheDecorator(new WidgetRepository(new Widget));
         });
 
-        $this->app->bind('Tec.widget', function () {
+        $this->app->bind('tec.widget', function () {
             return new WidgetFactory(new LaravelApplicationWrapper);
         });
 
-        $this->app->singleton('Tec.widget-group-collection', function () {
+        $this->app->singleton('tec.widget-group-collection', function () {
             return new WidgetGroupCollection(new LaravelApplicationWrapper);
         });
 
@@ -72,7 +72,6 @@ class WidgetServiceProvider extends ServiceProvider
 
             $widgetPath = theme_path(Theme::getThemeName() . '/widgets');
             $widgets = scan_folder($widgetPath);
-            dd($widgets);
             if (!empty($widgets) && is_array($widgets)) {
                 foreach ($widgets as $widget) {
                     $registration = $widgetPath . '/' . $widget . '/registration.php';

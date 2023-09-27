@@ -111,7 +111,7 @@ class WidgetGroup
         $widget['arguments'][] = $this->id;
         $widget['arguments'][] = $position;
 
-        $factory = $this->app->make('Tec.widget');
+        $factory = $this->app->make('tec.widget');
 
         return $factory->run(...$widget['arguments']);
     }
