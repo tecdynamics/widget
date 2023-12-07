@@ -3,20 +3,14 @@
 namespace Tec\Widget\Models;
 
 use Tec\Base\Models\BaseModel;
+use Tec\Language\Facades\Language;
+use Tec\Theme\Facades\Theme;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Widget extends BaseModel
 {
-
-    /**
-     * The database table used by the model.
-     *
-     * @var string
-     */
     protected $table = 'widgets';
 
-    /**
-     * @var array
-     */
     protected $fillable = [
         'widget_id',
         'sidebar_id',
@@ -25,21 +19,38 @@ class Widget extends BaseModel
         'data',
     ];
 
-    /**
-     * @var array
-     */
     protected $casts = [
         'data' => 'json',
     ];
 
-    /**
-     * Set mutator for the "position" attribute.
-     *
-     * @param int $position
-     * @return void
-     */
-    public function setPositionAttribute($position)
+    protected function position(): Attribute
     {
-        $this->attributes['position'] = $position >= 0 && $position < 127 ? $position : (int)substr($position, -1);
+        return Attribute::make(
+            set: fn ($value) => $value >= 0 && $value < 127 ? $value : (int)substr($value, -1)
+        );
+    }
+
+    public static function getThemeName(
+        string $locale = null,
+        string $defaultLocale = null,
+        string $theme = null
+    ): string {
+        if (! $theme) {
+            $theme = Theme::getThemeName();
+        }
+
+        if (! is_plugin_active('language')) {
+            return $theme;
+        }
+
+        if ($refLang = Language::getRefLang()) {
+            $locale = $refLang;
+        }
+
+        if (! $defaultLocale) {
+            $defaultLocale = Language::getDefaultLocale();
+        }
+
+        return (! $locale || $locale == $defaultLocale) ? $theme : ($theme . '-' . ltrim($locale, '-'));
     }
 }

@@ -2,17 +2,17 @@
 
 namespace Tec\Widget\Facades;
 
-use Illuminate\Support\Facades\Facade;
 use Tec\Widget\WidgetGroup;
+use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \Tec\Widget\Factories\WidgetFactory registerWidget(string $widget)
  * @method static array getWidgets()
  * @method static \Illuminate\Support\HtmlString|string|null run()
- * @deprecated
+ *
  * @see \Tec\Widget\Factories\WidgetFactory
  */
-class WidgetFacade extends Facade
+class Widget extends Facade
 {
     protected static function getFacadeAccessor(): string
     {

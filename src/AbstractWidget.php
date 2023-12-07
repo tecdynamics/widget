@@ -2,98 +2,70 @@
 
 namespace Tec\Widget;
 
-use Tec\Widget\Repositories\Interfaces\WidgetInterface;
-use Illuminate\Contracts\Filesystem\FileNotFoundException;
-use Illuminate\Contracts\View\Factory;
+use Tec\Theme\Facades\Theme;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\View\View;
-use Theme;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
+use ReflectionClass;
 
 abstract class AbstractWidget
 {
-    /**
-     * The configuration array.
-     *
-     * @var array
-     */
-    protected $config = [];
+    private array $config = [];
 
-    /**
-     * @var string
-     */
-    protected $frontendTemplate = 'frontend';
+    private array $extraAdminConfig = [];
 
-    /**
-     * @var string
-     */
-    protected $backendTemplate = 'backend';
+    private string $frontendTemplate = 'frontend';
 
-    /**
-     * @var string
-     */
-    protected $widgetDirectory;
+    private string $backendTemplate = 'backend';
 
-    /**
-     * @var bool
-     */
-    protected $isCore = false;
+    protected string|null $theme = null;
 
-    /**
-     * @var WidgetInterface
-     */
-    protected $widgetRepository;
+    protected array|Collection $data = [];
 
-    /**
-     * @var string
-     */
-    protected $theme = null;
+    protected bool $loaded = false;
 
-    /**
-     * @var Collection
-     */
-    protected $data = [];
-
-    /**
-     * Whether the settings data are loaded.
-     *
-     * @var boolean
-     */
-    protected $loaded = false;
-
-    /**
-     * AbstractWidget constructor.
-     * @param array $config
-     */
     public function __construct(array $config = [])
     {
         foreach ($config as $key => $value) {
             $this->config[$key] = $value;
         }
-
-        $this->widgetRepository = app(WidgetInterface::class);
     }
 
-    /**
-     * @return array
-     */
-    public function getConfig()
+    public function getWidgetDirectory(): string|null
     {
+        $reflection = new ReflectionClass($this);
+
+        return File::basename(File::dirname($reflection->getFilename()));
+    }
+
+    public function getConfig(string $name = null, $default = null): array|int|string|null
+    {
+        if ($name) {
+            return Arr::get($this->config, $name, $default);
+        }
+
         return $this->config;
+    }
+
+    protected function adminConfig(): array
+    {
+        return $this->extraAdminConfig;
     }
 
     /**
      * Treat this method as a controller action.
      * Return view() or other content to display.
-     *
-     * @throws FileNotFoundException
      */
-    public function run()
+    public function run(): string|null
     {
-        $widgetGroup = app('tec.widget-group-collection');
+        $widgetGroup = app('Tec.widget-group-collection');
         $widgetGroup->load();
         $widgetGroupData = $widgetGroup->getData();
 
         Theme::uses(Theme::getThemeName());
+
         $args = func_get_args();
         $data = $widgetGroupData
             ->where('widget_id', $this->getId())
@@ -101,43 +73,46 @@ abstract class AbstractWidget
             ->where('position', $args[1])
             ->first();
 
-        if (!empty($data)) {
+        if (! empty($data)) {
             $this->config = array_merge($this->config, $data->data);
         }
 
-        if (!$this->isCore) {
-            return Theme::loadPartial($this->frontendTemplate,
-                Theme::getThemeNamespace('/../widgets/' . $this->widgetDirectory . '/templates'), [
-                    'config'  => $this->config,
-                    'sidebar' => $args[0],
-                ]);
+        $viewData = array_merge([
+            'config' => $this->config,
+            'sidebar' => $args[0],
+            'position' => $data->position,
+            'widgetId' => $data->widget_id,
+        ], $this->data());
+
+        $html = null;
+
+        $widgetDirectory = $this->getWidgetDirectory();
+        $namespace = Str::afterLast($this->frontendTemplate, '.');
+
+        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $namespace))) {
+            $html = Theme::loadPartial(
+                $namespace,
+                Theme::getThemeNamespace('/../widgets/' . $widgetDirectory . '/templates'),
+                $viewData
+            );
+        } elseif (view()->exists($this->frontendTemplate)) {
+            $html = view($this->frontendTemplate, $viewData)->render();
         }
 
-        return view($this->frontendTemplate, [
-            'config'  => $this->config,
-            'sidebar' => $args[0],
-        ]);
+        return apply_filters('widget_rendered', $html, $this);
     }
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return get_class($this);
     }
 
-    /**
-     * @param string|null $sidebarId
-     * @param int $position
-     * @return Factory|View|mixed
-     * @throws FileNotFoundException
-     */
-    public function form($sidebarId = null, $position = 0)
+    public function form(string|null $sidebarId = null, int $position = 0): string|null
     {
         Theme::uses(Theme::getThemeName());
-        if (!empty($sidebarId)) {
-            $widgetGroup = app('tec.widget-group-collection');
+
+        if (! empty($sidebarId)) {
+            $widgetGroup = app('Tec.widget-group-collection');
             $widgetGroup->load();
             $widgetGroupData = $widgetGroup->getData();
 
@@ -147,20 +122,49 @@ abstract class AbstractWidget
                 ->where('position', $position)
                 ->first();
 
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $this->config = array_merge($this->config, $data->data);
             }
         }
 
-        if (!$this->isCore) {
-            return Theme::loadPartial($this->backendTemplate,
-                Theme::getThemeNamespace('/../widgets/' . $this->widgetDirectory . '/templates'), [
+        $widgetDirectory = $this->getWidgetDirectory();
+        $namespace = Str::afterLast($this->backendTemplate, '.');
+
+        if (View::exists(Theme::getThemeNamespace('widgets.' . $widgetDirectory . '.templates.' . $namespace))) {
+            return Theme::loadPartial(
+                $namespace,
+                Theme::getThemeNamespace('/../widgets/' . $widgetDirectory . '/templates'),
+                array_merge([
                     'config' => $this->config,
-                ]);
+                ], $this->adminConfig())
+            );
         }
 
-        return view($this->backendTemplate, [
+        if (! view()->exists($this->backendTemplate)) {
+            return null;
+        }
+
+        return view($this->backendTemplate, array_merge([
             'config' => $this->config,
-        ]);
+        ], $this->adminConfig()))->render();
+    }
+
+    protected function data(): array|Collection
+    {
+        return $this->data;
+    }
+
+    protected function setBackendTemplate(string $template): self
+    {
+        $this->backendTemplate = $template;
+
+        return $this;
+    }
+
+    protected function setFrontendTemplate(string $template): self
+    {
+        $this->frontendTemplate = $template;
+
+        return $this;
     }
 }

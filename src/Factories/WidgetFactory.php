@@ -4,66 +4,38 @@ namespace Tec\Widget\Factories;
 
 use Tec\Widget\Misc\InvalidWidgetClassException;
 use Exception;
+use Illuminate\Support\HtmlString;
 
 class WidgetFactory extends AbstractWidgetFactory
 {
+    protected array $widgets = [];
 
-    /**
-     * @var array
-     */
-    protected $widgets = [];
-
-    /**
-     * @param string $widget
-     * @return $this
-     */
-    public function registerWidget($widget)
+    public function registerWidget(string $widget): WidgetFactory
     {
-        $this->widgets[] = new $widget;
+        $this->widgets[] = new $widget();
 
         return $this;
     }
 
-    /**
-     * @return array
-     */
     public function getWidgets(): array
     {
         return $this->widgets;
     }
 
-    /**
-     * Run widget without magic method.
-     *
-     * @return mixed
-     */
-    public function run()
+    public function run(): HtmlString|string|null
     {
         $args = func_get_args();
 
         try {
             $this->instantiateWidget($args);
-        } catch (InvalidWidgetClassException $exception) {
-            if (config('app.debug') == true) {
-                return $exception->getMessage();
-            }
-            return null;
-        } catch (Exception $exception) {
-            if (config('app.debug') == true) {
-                return $exception->getMessage();
-            }
-            return null;
+        } catch (InvalidWidgetClassException | Exception $exception) {
+            return app()->hasDebugModeEnabled() ? $exception->getMessage() : null;
         }
 
         return $this->convertToViewExpression($this->getContent());
     }
 
-    /**
-     * Make call and get return widget content.
-     *
-     * @return mixed
-     */
-    protected function getContent()
+    protected function getContent(): string|null
     {
         $content = $this->app->call([$this->widget, 'run'], $this->widgetParams);
 

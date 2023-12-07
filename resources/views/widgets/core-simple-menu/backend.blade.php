@@ -8,10 +8,8 @@
     >
 </div>
 <div class="form-group mb-3">
+
     <label for="content">{{ trans('core/base::forms.content') }}</label>
-    <textarea
-        class="form-control"
-        name="content"
-        rows="7"
-    >{{ $config['content'] }}</textarea>
+
+    {!! Form::repeater('items', $config['items'], $fields) !!}
 </div>

@@ -12,10 +12,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static string render(string $sidebarId,$data=[])
  * @method static void load(bool $force = false)
  * @method static \Illuminate\Support\Collection getData()
- * @deprecated
+ *
  * @see \Tec\Widget\WidgetGroupCollection
  */
-class WidgetGroupFacade extends Facade
+class WidgetGroup extends Facade
 {
     protected static function getFacadeAccessor(): string
     {

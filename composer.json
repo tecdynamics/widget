@@ -7,15 +7,18 @@
             "Tec\\Widget\\": "src"
         }
     },
-
+    "require": {
+        "tecdynamics/platform": "*@dev",
+        "tecdynamics/theme": "*@dev"
+    },
     "extra": {
         "laravel": {
             "providers": [
                 "Tec\\Widget\\Providers\\WidgetServiceProvider"
             ],
             "aliases": {
-                "Widget": "Tec\\Widget\\Facades\\WidgetFacade",
-                "WidgetGroup": "Tec\\Widget\\Facades\\WidgetGroupFacade"
+                "Widget": "Tec\\Widget\\Facades\\Widget",
+                "WidgetGroup": "Tec\\Widget\\Facades\\WidgetGroup"
             }
         }
     }

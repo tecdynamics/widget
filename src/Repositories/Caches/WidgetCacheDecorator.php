@@ -2,16 +2,11 @@
 
 namespace Tec\Widget\Repositories\Caches;
 
-use Tec\Support\Repositories\Caches\CacheAbstractDecorator;
-use Tec\Widget\Repositories\Interfaces\WidgetInterface;
+use Tec\Widget\Repositories\Eloquent\WidgetRepository;
 
-class WidgetCacheDecorator extends CacheAbstractDecorator implements WidgetInterface
+/**
+ * @deprecated
+ */
+class WidgetCacheDecorator extends WidgetRepository
 {
-    /**
-     * {@inheritDoc}
-     */
-    public function getByTheme($theme)
-    {
-        return $this->getDataIfExistCache(__FUNCTION__, func_get_args());
-    }
 }
