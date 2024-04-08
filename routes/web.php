@@ -1,10 +1,10 @@
 <?php
 
-use Tec\Base\Facades\BaseHelper;
+use Tec\Base\Facades\AdminHelper;
 use Illuminate\Support\Facades\Route;
 
-Route::group(['namespace' => 'Tec\Widget\Http\Controllers', 'middleware' => ['web', 'core']], function () {
-    Route::group(['prefix' => BaseHelper::getAdminPrefix(), 'middleware' => 'auth'], function () {
+Route::group(['namespace' => 'Tec\Widget\Http\Controllers'], function () {
+    AdminHelper::registerRoutes(function () {
         Route::group(['prefix' => 'widgets'], function () {
             Route::get('load-widget', 'WidgetController@showWidget');
 

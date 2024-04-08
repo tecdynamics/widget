@@ -60,16 +60,14 @@ class WidgetGroupCollection
         return $this->groups;
     }
 
-    public function render(string $sidebarId,$data=[]): string
+    public function render(string $sidebarId): string
     {
         $this->load();
 
         foreach ($this->data as $widget) {
-            $_data=array_merge((array)$widget->data,$data);
-           // dd($_data);
             $this->group($widget->sidebar_id)
                 ->position($widget->position)
-                ->addWidget($widget->widget_id, $_data);
+                ->addWidget($widget->widget_id, $widget->data);
         }
 
         return $this->group($sidebarId)->display();
@@ -81,7 +79,6 @@ class WidgetGroupCollection
             $this->data = $this->read();
             $this->loaded = true;
         }
-
     }
 
     protected function read(): Collection

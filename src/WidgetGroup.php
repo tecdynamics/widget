@@ -38,6 +38,7 @@ class WidgetGroup
     public function display(): string
     {
         ksort($this->widgets);
+
         $output = '';
         $count = 0;
         foreach ($this->widgets as $position => $widgets) {
@@ -58,11 +59,11 @@ class WidgetGroup
      */
     protected function displayWidget(array $widget, int|null $position): string|null
     {
-
         $widget['arguments'][] = $this->id;
         $widget['arguments'][] = $position;
 
-        $factory = $this->app->make('Tec.widget');
+        $factory = $this->app->make('tec.widget');
+
         return $factory->run(...$widget['arguments']);
     }
 

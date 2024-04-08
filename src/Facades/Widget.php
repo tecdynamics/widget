@@ -16,11 +16,11 @@ class Widget extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return 'Tec.widget';
+        return 'tec.widget';
     }
 
     public static function group(string $name): WidgetGroup
     {
-        return app('Tec.widget-group-collection')->group($name);
+        return app('tec.widget-group-collection')->group($name);
     }
 }

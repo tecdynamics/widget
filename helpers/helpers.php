@@ -27,8 +27,8 @@ if (! function_exists('remove_sidebar')) {
 }
 
 if (! function_exists('dynamic_sidebar')) {
-    function dynamic_sidebar(string $sidebarId,$data=[]): string
+    function dynamic_sidebar(string $sidebarId): string
     {
-        return WidgetGroup::render($sidebarId,$data);
+        return WidgetGroup::render($sidebarId);
     }
 }

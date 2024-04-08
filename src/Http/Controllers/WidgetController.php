@@ -3,9 +3,9 @@
 namespace Tec\Widget\Http\Controllers;
 
 use Tec\Base\Facades\Assets;
-use Tec\Base\Facades\PageTitle;
 use Tec\Base\Http\Controllers\BaseController;
-use Tec\Base\Http\Responses\BaseHttpResponse;
+use Tec\Base\Supports\Breadcrumb;
+use Tec\Widget\Events\RenderingWidgetSettings;
 use Tec\Widget\Facades\WidgetGroup;
 use Tec\Widget\Models\Widget;
 use Exception;
@@ -14,28 +14,40 @@ use Illuminate\Support\Arr;
 
 class WidgetController extends BaseController
 {
+    protected function breadcrumb(): Breadcrumb
+    {
+        return parent::breadcrumb()
+            ->add(trans('packages/theme::theme.appearance'))
+            ->add(trans('packages/widget::widget.name'), route('widgets.index'));
+    }
+
     public function index()
     {
-        PageTitle::setTitle(trans('packages/widget::widget.name'));
+        $this->pageTitle(trans('packages/widget::widget.name'));
 
         Assets::addScripts(['sortable'])
-            ->addScriptsDirectly('vendor/core/packages/widget/js/widget.js');
+            ->addScriptsDirectly('vendor/core/packages/widget/js/widget.js')
+            ->addStylesDirectly('vendor/core/packages/widget/css/widget.css');
+
+        RenderingWidgetSettings::dispatch();
 
         $widgets = Widget::query()->where('theme', Widget::getThemeName())->get();
 
         $groups = WidgetGroup::getGroups();
         foreach ($widgets as $widget) {
-            if (Arr::has($groups, $widget->sidebar_id)) {
-                WidgetGroup::group($widget->sidebar_id)
-                    ->position($widget->position)
-                    ->addWidget($widget->widget_id, $widget->data);
+            if (! Arr::has($groups, $widget->sidebar_id)) {
+                continue;
             }
+
+            WidgetGroup::group($widget->sidebar_id)
+                ->position($widget->position)
+                ->addWidget($widget->widget_id, $widget->data);
         }
 
         return view('packages/widget::list');
     }
 
-    public function update(Request $request, BaseHttpResponse $response)
+    public function update(Request $request)
     {
         try {
             $sidebarId = $request->input('sidebar_id');
@@ -47,8 +59,10 @@ class WidgetController extends BaseController
                 'theme' => $themeName,
             ])->delete();
 
-            foreach ($request->input('items', []) as $key => $item) {
+            foreach (array_filter($request->input('items', [])) as $key => $item) {
+
                 parse_str($item, $data);
+
                 if (empty($data['id'])) {
                     continue;
                 }
@@ -67,17 +81,19 @@ class WidgetController extends BaseController
                 'theme' => $themeName,
             ])->get();
 
-            return $response
+            return $this
+                ->httpResponse()
                 ->setData(view('packages/widget::item', compact('widgetAreas'))->render())
                 ->setMessage(trans('packages/widget::widget.save_success'));
         } catch (Exception $exception) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
         }
     }
 
-    public function destroy(Request $request, BaseHttpResponse $response)
+    public function destroy(Request $request)
     {
         try {
             Widget::query()->where([
@@ -87,9 +103,22 @@ class WidgetController extends BaseController
                 'widget_id' => $request->input('widget_id'),
             ])->delete();
 
-            return $response->setMessage(trans('packages/widget::widget.delete_success'));
+            $sidebarId = $request->input('sidebar_id');
+
+            $themeName = Widget::getThemeName();
+
+            $widgetAreas = Widget::query()->where([
+                'sidebar_id' => $sidebarId,
+                'theme' => $themeName,
+            ])->get();
+
+            return $this
+                ->httpResponse()
+                ->setData(view('packages/widget::item', compact('widgetAreas'))->render())
+                ->setMessage(trans('packages/widget::widget.delete_success'));
         } catch (Exception $exception) {
-            return $response
+            return $this
+                ->httpResponse()
                 ->setError()
                 ->setMessage($exception->getMessage());
         }

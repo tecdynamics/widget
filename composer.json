@@ -1,5 +1,5 @@
 {
-    "name": "tecdynamics/widget",
+    "name": "Tec/widget",
     "description": "Widget package",
     "type": "package",
     "autoload": {
@@ -8,8 +8,8 @@
         }
     },
     "require": {
-        "tecdynamics/platform": "*@dev",
-        "tecdynamics/theme": "*@dev"
+        "Tec/platform": "*@dev",
+        "Tec/theme": "*@dev"
     },
     "extra": {
         "laravel": {

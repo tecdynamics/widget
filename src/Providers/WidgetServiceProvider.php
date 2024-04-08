@@ -2,13 +2,14 @@
 
 namespace Tec\Widget\Providers;
 
-use Tec\Base\Facades\BaseHelper;
+use Auth;
+use BaseHelper;
+use Html;
 use Tec\Base\Facades\DashboardMenu;
-use Tec\Base\Facades\Html;
 use Tec\Base\Supports\ServiceProvider;
 use Tec\Base\Traits\LoadAndPublishDataTrait;
+use Tec\Theme\Events\RenderingAdminBar;
 use Tec\Theme\Facades\AdminBar;
-use Tec\Theme\Facades\Theme;
 use Tec\Theme\Supports\ThemeSupport;
 use Tec\Widget\AbstractWidget;
 use Tec\Widget\Facades\WidgetGroup;
@@ -20,8 +21,7 @@ use Tec\Widget\WidgetGroupCollection;
 use Tec\Widget\Widgets\CoreSimpleMenu;
 use Tec\Widget\Widgets\Text;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Routing\Events\RouteMatched;
-use Illuminate\Support\Facades\Auth;
+use Theme;
 
 class WidgetServiceProvider extends ServiceProvider
 {
@@ -33,22 +33,21 @@ class WidgetServiceProvider extends ServiceProvider
             return new WidgetRepository(new Widget());
         });
 
-        $this->app->bind('Tec.widget', function (Application $app) {
+        $this->app->bind('tec.widget', function (Application $app) {
             return new WidgetFactory($app);
         });
 
-        $this->app->singleton('Tec.widget-group-collection', function (Application $app) {
+        $this->app->singleton('tec.widget-group-collection', function (Application $app) {
             return new WidgetGroupCollection($app);
         });
-
-        $this->setNamespace('packages/widget')
-            ->loadHelpers();
     }
 
     public function boot(): void
     {
         $this
+            ->setNamespace('packages/widget')
             ->loadAndPublishConfigurations(['permissions'])
+            ->loadHelpers()
             ->loadRoutes()
             ->loadMigrations()
             ->loadAndPublishViews()
@@ -64,6 +63,8 @@ class WidgetServiceProvider extends ServiceProvider
 
             register_widget(CoreSimpleMenu::class);
             register_widget(Text::class);
+
+            /*************************/
 
             $widgetPath = theme_path(Theme::getThemeName() . '/widgets');
             $widgets = BaseHelper::scanFolder($widgetPath);
@@ -100,25 +101,24 @@ class WidgetServiceProvider extends ServiceProvider
             }, 16);
         });
 
-        $this->app['events']->listen(RouteMatched::class, function () {
-            DashboardMenu::registerItem([
-                'id' => 'cms-core-widget',
-                'priority' => 3,
-                'parent_id' => 'cms-core-appearance',
-                'name' => 'packages/widget::widget.name',
-                'icon' => null,
-                'url' => route('widgets.index'),
-                'permissions' => ['widgets.index'],
-            ]);
+        DashboardMenu::default()->beforeRetrieving(function () {
+            DashboardMenu::make()
+                ->registerItem([
+                    'id' => 'cms-core-widget',
+                    'priority' => 3,
+                    'parent_id' => 'cms-core-appearance',
+                    'name' => 'packages/widget::widget.name',
+                    'route' => 'widgets.index',
+                ]);
+        });
 
-            if (function_exists('admin_bar')) {
-                AdminBar::registerLink(
-                    trans('packages/widget::widget.name'),
-                    route('widgets.index'),
-                    'appearance',
-                    'widgets.index'
-                );
-            }
+        $this->app['events']->listen(RenderingAdminBar::class, function () {
+            AdminBar::registerLink(
+                trans('packages/widget::widget.name'),
+                route('widgets.index'),
+                'appearance',
+                'widgets.index'
+            );
         });
     }
 }

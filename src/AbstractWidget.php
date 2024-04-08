@@ -3,6 +3,8 @@
 namespace Tec\Widget;
 
 use Tec\Theme\Facades\Theme;
+use Tec\Widget\Facades\WidgetGroup as WidgetGroupFacade;
+use Tec\Widget\Forms\WidgetForm;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
@@ -25,6 +27,8 @@ abstract class AbstractWidget
     protected array|Collection $data = [];
 
     protected bool $loaded = false;
+
+    protected WidgetGroup|null $group = null;
 
     public function __construct(array $config = [])
     {
@@ -60,16 +64,19 @@ abstract class AbstractWidget
      */
     public function run(): string|null
     {
-        $widgetGroup = app('Tec.widget-group-collection');
+        $widgetGroup = app('tec.widget-group-collection');
         $widgetGroup->load();
         $widgetGroupData = $widgetGroup->getData();
 
         Theme::uses(Theme::getThemeName());
 
         $args = func_get_args();
+
+        $this->group = WidgetGroupFacade::group($args[0]);
+
         $data = $widgetGroupData
             ->where('widget_id', $this->getId())
-            ->where('sidebar_id', $args[0])
+            ->where('sidebar_id', $this->group->getId())
             ->where('position', $args[1])
             ->first();
 
@@ -104,7 +111,7 @@ abstract class AbstractWidget
 
     public function getId(): string
     {
-        return get_class($this);
+        return $this::class;
     }
 
     public function form(string|null $sidebarId = null, int $position = 0): string|null
@@ -112,7 +119,7 @@ abstract class AbstractWidget
         Theme::uses(Theme::getThemeName());
 
         if (! empty($sidebarId)) {
-            $widgetGroup = app('Tec.widget-group-collection');
+            $widgetGroup = app('tec.widget-group-collection');
             $widgetGroup->load();
             $widgetGroupData = $widgetGroup->getData();
 
@@ -127,6 +134,13 @@ abstract class AbstractWidget
             }
         }
 
+        $settingForm = $this->settingForm();
+
+        return $settingForm instanceof WidgetForm ? $settingForm->renderForm() : $settingForm;
+    }
+
+    protected function settingForm(): WidgetForm|string|null
+    {
         $widgetDirectory = $this->getWidgetDirectory();
         $namespace = Str::afterLast($this->backendTemplate, '.');
 
@@ -166,5 +180,10 @@ abstract class AbstractWidget
         $this->frontendTemplate = $template;
 
         return $this;
+    }
+
+    public function getGroup(): WidgetGroup|null
+    {
+        return $this->group;
     }
 }
