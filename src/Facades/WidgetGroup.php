@@ -19,6 +19,6 @@ class WidgetGroup extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return 'tec.widget-group-collection';
+        return 'Tec.widget-group-collection';
     }
 }
